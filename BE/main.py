@@ -62,5 +62,6 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 @app.post("/")
-async def chat_model():
-    return {"This is test for Chatbot"}
+async def chat_model(qs, image_file):
+    result = inference(qs, image_file)
+    return {result}
