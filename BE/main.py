@@ -63,5 +63,5 @@ app.openapi = custom_openapi
 
 @app.post("/")
 async def chat_model(qs, image_file):
-    result = inference(qs, image_file)
+    result = model.inference(qs, image_file)
     return {result}
