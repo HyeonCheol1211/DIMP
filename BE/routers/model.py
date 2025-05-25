@@ -30,7 +30,7 @@ from transformers import LlamaTokenizer
 #tokenizer = LlamaTokenizer.from_pretrained(model_name, legacy=False)
 #kollava_model = AutoModelForCausalLM.from_pretrained(model_name, low_cpu_mem_usage=True, torch_dtype=torch.float16, use_cache=True).cuda()
 
-save_path = "./KoLLaVA_Cache"
+save_path = os.path.abspath("./KoLLaVA_Cache")
 
 tokenizer = AutoTokenizer.from_pretrained(save_path)
 model = AutoModelForCausalLM.from_pretrained(save_path)
