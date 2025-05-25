@@ -11,7 +11,7 @@ npm run build
 ## 2.1 nginx.conf 변경
 - server에 root 부분을 build 폴더의 절대경로로 수정
 - location static 또한 수정
-- 다운로드 한 nginx/conf/nginx.conf 파일을 github의 nginx.conf 내용으로 수정
+- 다운로드 한 nginx/conf/nginx.conf 파일을 github의 nginx.conf 내용으로 수정(다운로드 방법은 문서 최하단에서)
 ##  2.2  nginx 실행 혹은 재실행 
 
 ### 실행
