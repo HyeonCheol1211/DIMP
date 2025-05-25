@@ -32,8 +32,8 @@ from transformers import LlamaTokenizer
 
 save_path = os.path.abspath("./KoLLaVA_Cache")
 
-tokenizer = AutoTokenizer.from_pretrained(save_path)
-model = AutoModelForCausalLM.from_pretrained(save_path)
+tokenizer = AutoTokenizer.from_pretrained(save_path, local_files_only=True)
+model = AutoModelForCausalLM.from_pretrained(save_path, local_files_only=True)
 
 image_processor = CLIPImageProcessor.from_pretrained(model.config.mm_vision_tower, torch_dtype=torch.float16)
 
