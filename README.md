@@ -32,4 +32,4 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ### Nginx 버전
 [다운사이트](https://nginx.org/en/download.html)
 - Stable version
-- nginx/Windows-1.28.0  pgp
+- nginx/Windows-1.28.0
