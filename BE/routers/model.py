@@ -27,9 +27,13 @@ model_name = 'tabtoyou/KoLLaVA-KoVicuna-7b'
 
 from transformers import LlamaTokenizer
 
-tokenizer = LlamaTokenizer.from_pretrained(model_name, legacy=False)
-kollava_model = AutoModelForCausalLM.from_pretrained(model_name, low_cpu_mem_usage=True, torch_dtype=torch.float16, use_cache=True).cuda()
+#tokenizer = LlamaTokenizer.from_pretrained(model_name, legacy=False)
+#kollava_model = AutoModelForCausalLM.from_pretrained(model_name, low_cpu_mem_usage=True, torch_dtype=torch.float16, use_cache=True).cuda()
 
+save_path = "./KoLLaVA_Cache"
+
+tokenizer = AutoTokenizer.from_pretrained(save_path)
+model = AutoModelForCausalLM.from_pretrained(save_path)
 
 image_processor = CLIPImageProcessor.from_pretrained(model.config.mm_vision_tower, torch_dtype=torch.float16)
 
