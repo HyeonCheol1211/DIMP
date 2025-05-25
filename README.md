@@ -8,7 +8,11 @@
 npm run build
 ```
 
-##  2.  nginx 실행 혹은 재실행 
+## 2.1 nginx.conf 변경
+- server에 root 부분을 build 폴더의 절대경로로 수정
+- location static 또한 수정
+
+##  2.2  nginx 실행 혹은 재실행 
 
 ### 실행
 ```bash
@@ -17,7 +21,7 @@ npm run build
 
 ### 재실행
 ```bash
-./nginx.exe -s -reload
+./nginx.exe -s reload
 ```
 
 ## 3. BE에서 서버 실행
