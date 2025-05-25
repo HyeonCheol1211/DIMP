@@ -32,7 +32,7 @@ from transformers import LlamaTokenizer
 
 save_path = "/home/ubuntu/DIMP/BE/routers/KoLLaVA_Cache"
 
-tokenizer = AutoTokenizer.from_pretrained(save_path, local_files_only=True)
+tokenizer = AutoTokenizer.from_pretrained(save_path, local_files_only=True, legacy=False)
 model = AutoModelForCausalLM.from_pretrained(save_path, local_files_only=True)
 
 image_processor = CLIPImageProcessor.from_pretrained(model.config.mm_vision_tower, torch_dtype=torch.float16)
