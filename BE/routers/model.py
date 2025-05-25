@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM, LlavaLlamaForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 import os
 from llava.conversation import conv_templates, SeparatorStyle
@@ -28,7 +28,7 @@ model_name = 'tabtoyou/KoLLaVA-KoVicuna-7b'
 from transformers import LlamaTokenizer
 
 tokenizer = LlamaTokenizer.from_pretrained(model_name, legacy=False)
-kollava_model = LlavaLlamaForCausalLM.from_pretrained(model_name, low_cpu_mem_usage=True, torch_dtype=torch.float16, use_cache=True).cuda()
+kollava_model = AutoModelForCausalLM.from_pretrained(model_name, low_cpu_mem_usage=True, torch_dtype=torch.float16, use_cache=True).cuda()
 
 
 image_processor = CLIPImageProcessor.from_pretrained(model.config.mm_vision_tower, torch_dtype=torch.float16)

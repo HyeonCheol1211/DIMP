@@ -63,4 +63,4 @@ app.openapi = custom_openapi
 
 @app.post("/")
 async def chat_model():
-    return 0
+    return {"This is test for Chatbot"}
