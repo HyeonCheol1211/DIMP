@@ -16,7 +16,7 @@ origins = [
 # CORS 설정 (React 개발서버에서 호출 가능하도록)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # React 기본 개발 서버 주소
+    allow_origins="http://localhost:3000",  # React 기본 개발 서버 주소
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
