@@ -26,3 +26,8 @@ async def chat(req: ChatRequest):
     user_msg = req.message
     reply = f"챗봇이 응답함: {user_msg}"
     return ChatResponse(reply=reply)
+
+# AWS 검증용
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
