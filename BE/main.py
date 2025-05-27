@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 
+import os
 app = FastAPI()
 
 app.add_middleware(
@@ -33,3 +34,8 @@ async def chat(req: ChatRequest):
     else:
         user_msg = req.message or ""
         return ChatResponse(reply=f"챗봇이 응답함: {user_msg}")
+
+# AWS 검증용
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}

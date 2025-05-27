@@ -215,3 +215,83 @@
   display: inline-block;
   transform: translateX(2px);
 }
+
+
+/* 이미지 미리보기 컨테이너 */
+.image-preview-container {
+  display: flex;
+  align-items: center;
+  margin: 10px 20px;
+  gap: 12px;
+}
+
+/* 미리보기 이미지 스타일 */
+.image-preview-container .message-image {
+  max-width: 160px;
+  max-height: 120px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* 이미지 제거 버튼 (❌) */
+.remove-image-button {
+  background-color: #4a4b57;
+  border: none;
+  color: #ff6b6b;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 6px 10px;
+  transition: background-color 0.15s ease;
+}
+
+.remove-image-button:hover {
+  background-color: #5c5d6a;
+  color: #ff4c4c;
+}
+
+/* 전송 버튼 비활성화 상태 */
+.send-button:disabled {
+  background-color: #9e9e9e;
+  color: #ffffff;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* 전송 버튼 아이콘 조정 */
+.send-button::before {
+  content: '▶';
+  font-size: 1.2rem;
+  transform: none;
+}
+
+.image-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* ❌ 아이콘 크기 및 정렬 */
+.x-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  pointer-events: none; /* 버튼 클릭만 인식되도록 */
+}
+
+/* 삭제 버튼 자체 스타일 */
+.remove-image-button {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.remove-image-button:hover {
+  opacity: 0.8;
+}

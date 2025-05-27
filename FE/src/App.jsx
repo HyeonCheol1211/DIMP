@@ -4,6 +4,7 @@ import './App.css';
 export default function App() {
   const [input, setInput] = useState("");
   const [chatLog, setChatLog] = useState([]);
+  const [imagePreview, setImagePreview] = useState(null);
   const chatEndRef = useRef(null);
 
   const fileToBase64 = (file) =>
@@ -14,18 +15,19 @@ export default function App() {
       reader.onerror = (error) => reject(error);
     });
 
-  const sendMessage = async (imageDataUrl = null) => {
-    if (!input.trim() && !imageDataUrl) return;
+  const sendMessage = async () => {
+    if (!input.trim() && !imagePreview) return;
 
     if (input.trim())
       setChatLog((prev) => [...prev, { sender: "user", text: input }]);
-    if (imageDataUrl)
-      setChatLog((prev) => [...prev, { sender: "user", image: imageDataUrl }]);
+    if (imagePreview)
+      setChatLog((prev) => [...prev, { sender: "user", image: imagePreview }]);
 
     try {
-      const body = imageDataUrl
-        ? { image_url: imageDataUrl }
-        : { message: input };
+      const body = {
+        ...(input.trim() && { message: input }),
+        ...(imagePreview && { image_url: imagePreview }),
+      };
 
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -52,6 +54,7 @@ export default function App() {
     }
 
     setInput("");
+    setImagePreview(null);
   };
 
   const handleKeyPress = (e) => {
@@ -66,7 +69,7 @@ export default function App() {
     if (!file) return;
 
     const base64 = await fileToBase64(file);
-    sendMessage(base64);
+    setImagePreview(base64);
     e.target.value = null;
   };
 
@@ -76,14 +79,14 @@ export default function App() {
     }
   }, [chatLog]);
 
+  const canSend = input.trim() || imagePreview;
+
   return (
     <div className="app-container">
-      {/* 상단 헤더 */}
       <header className="app-header">
         <div className="app-logo">DIMP</div>
       </header>
 
-      {/* 채팅 내용 */}
       <main className="chatbox" role="main" tabIndex="-1">
         <div className="chatlog" aria-live="polite" aria-relevant="additions">
           {chatLog.length === 0 && (
@@ -108,8 +111,24 @@ export default function App() {
           ))}
           <div ref={chatEndRef} />
         </div>
+        
+        {imagePreview && (
+          <div className="image-preview-container">
+            <img
+              src={imagePreview}
+              alt="첨부된 이미지"
+              className="message-image"
+            />
+            <button
+              onClick={() => setImagePreview(null)}
+              className="remove-image-button"
+              title="이미지 제거"
+            >
+              <img src="/images/x.png" alt="취소 이미지" className="x-icon"/>
+            </button>
+          </div>
+        )}
 
-        {/* 입력 영역 */}
         <form
           className="input-area"
           onSubmit={(e) => {
@@ -119,7 +138,7 @@ export default function App() {
           aria-label="메시지 입력창"
         >
           <label htmlFor="image-upload" className="image-upload-label" title="사진 첨부">
-            📷
+            <img src="/images/picture.png" alt="사진 첨부 이미지" className="image-icon" />
           </label>
           <input
             id="image-upload"
@@ -129,6 +148,7 @@ export default function App() {
             style={{ display: "none" }}
             aria-hidden="true"
           />
+
           <textarea
             rows={1}
             placeholder="메시지를 입력하세요"
@@ -138,10 +158,16 @@ export default function App() {
             className="input-textarea"
             aria-multiline="true"
           />
-          <button type="submit" className="send-button" title="전송">
-            
+
+          <button
+            type="submit"
+            className="send-button"
+            title="전송"
+            disabled={!canSend}
+          >
           </button>
         </form>
+        
       </main>
     </div>
   );
