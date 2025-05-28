@@ -27,14 +27,14 @@ DEFAULT_IM_START_TOKEN = "<im_start>"
 DEFAULT_IM_END_TOKEN = "<im_end>"
 IMAGE_TOKEN_INDEX = -200
 
-vdb_model_name = "openai/clip-vit-large-patch14-336"
-vdb_model = CLIPModel.from_pretrained(vdb_model_name)
-processor = CLIPProcessor.from_pretrained(vdb_model_name, torch_dtype=torch.float16)
-vdb_model.eval()
-
 tokenizer = AutoProcessor.from_pretrained("tabtoyou/KoLLaVA-v1.5-Synatra-7b")
 model = LlavaLlamaForCausalLM.from_pretrained(model_name, low_cpu_mem_usage=True, torch_dtype=torch.float16, use_cache=True).to(device)
 image_processor = CLIPImageProcessor.from_pretrained(model.config.mm_vision_tower, torch_dtype=torch.float16)
+
+vdb_model_name = "openai/clip-vit-large-patch14-336"
+vdb_model = CLIPModel.from_pretrained(vdb_model_name)
+#processor = CLIPProcessor.from_pretrained(vdb_model_name, torch_dtype=torch.float16)
+vdb_model.eval()
 
 mm_use_im_start_end = getattr(model.config, "mm_use_im_start_end", False)
 tokenizer.add_tokens([DEFAULT_IMAGE_PATCH_TOKEN], special_tokens=True)
