@@ -111,7 +111,7 @@ def generate_answer(
     input_len = inputs["input_ids"].shape[-1]
 
     with torch.inference_mode():
-        generation = model.generate(**inputs, max_new_tokens=200, do_sample=False)
+        generation = model.generate(**inputs, max_new_tokens=500, do_sample=False)
         generation = generation[0][input_len:]
 
     decoded = processor.decode(generation, skip_special_tokens=True)
