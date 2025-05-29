@@ -48,13 +48,20 @@ async def chat(req: ChatRequest):
         )
     
     if req.image_url and req.message:
-        if req.image_url.startswith('http') or req.image_url.startswith('https'):
-            response = requests.get(req.image_url)
-            image = Image.open(BytesIO(response.content)).convert('RGB')
+        # URL 유효성 검사
+        if req.image_url.startswith(('http://', 'https://')):
+            try:
+                response = requests.get(req.image_url, timeout=5)
+                response.raise_for_status()  # HTTP 에러 체크
+                image = Image.open(BytesIO(response.content)).convert('RGB')
+            except Exception as e:
+                return ChatResponse(reply=f"이미지 불러오기 오류: {str(e)}")
+            
+            # 멀티모달 처리
+            result = multimodal_query(query_text=req.message, image=image)
+            return ChatResponse(reply=f"{result}")
         else:
-            image = Image.open(req.image_url).convert('RGB')
-        response = multimodal_query(query_text=req.message, image=image)
-
+            return ChatResponse(reply="잘못된 이미지 URL입니다.")
 
 # AWS 검증용
 @app.get("/health")
