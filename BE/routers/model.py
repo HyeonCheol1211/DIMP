@@ -27,8 +27,8 @@ clip_processor = CLIPProcessor.from_pretrained(vdb_model_name)
 vdb_model.eval()
 
 # FAISS index 및 메타데이터 로드 (캐싱)
-index = faiss.read_index("home/ubuntu/DIMP/BE/skin_disease.index")
-with open("home/ubuntu/DIMP/BE/skin_disease_metadata.json", encoding="utf-8") as f:
+index = faiss.read_index("/home/ubuntu/DIMP/BE/skin_disease.index")
+with open("/home/ubuntu/DIMP/BE/skin_disease_metadata.json", encoding="utf-8") as f:
     id_map = json.load(f)
 
 
