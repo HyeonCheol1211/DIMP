@@ -1,85 +1,103 @@
-from transformers import AutoProcessor
+from transformers import AutoProcessor, AutoModelForImageTextToText
+from PIL import Image
 import requests
 import torch
-from llava.conversation import conv_templates, SeparatorStyle
-from transformers import CLIPImageProcessor
-from llava.model import *
-from llava.mm_utils import KeywordsStoppingCriteria
-from llava.model.multimodal_encoder.builder import build_vision_tower
-from io import BytesIO
-from PIL import Image
-from llava.mm_utils import tokenizer_image_token
 
-from fastapi import APIRouter
-router = APIRouter()
+model_id = "google/medgemma-4b-it"
 
-device = "cuda:0"
-model_name = "tabtoyou/KoLLaVA-v1.5-Synatra-7b"
+model = AutoModelForImageTextToText.from_pretrained(
+    model_id,
+    torch_dtype=torch.bfloat16,
+    device_map="auto",
+)
+processor = AutoProcessor.from_pretrained(model_id)
 
-DEFAULT_IMAGE_TOKEN = "<image>"
-DEFAULT_IMAGE_PATCH_TOKEN = "<im_patch>"
-DEFAULT_IM_START_TOKEN = "<im_start>"
-DEFAULT_IM_END_TOKEN = "<im_end>"
-IMAGE_TOKEN_INDEX = -200
+import faiss
+import json
+from transformers import CLIPProcessor, CLIPModel
 
-def load_image(image_file):
-    if image_file.startswith('http') or image_file.startswith('https'):
-        response = requests.get(image_file)
-        image = Image.open(BytesIO(response.content)).convert('RGB')
-    else:
-        image = Image.open(image_file).convert('RGB')
-    return image
+vdb_model_name = "openai/clip-vit-large-patch14-336"
+vdb_model = CLIPModel.from_pretrained(vdb_model_name)
+clip_processor = CLIPProcessor.from_pretrained(vdb_model_name, torch_dtype=torch.float16)
+vdb_model.eval()
 
-tokenizer = AutoProcessor.from_pretrained("tabtoyou/KoLLaVA-v1.5-Synatra-7b")
-model = LlavaLlamaForCausalLM.from_pretrained(model_name, low_cpu_mem_usage=True, torch_dtype=torch.float16, use_cache=True).to(device)
-image_processor = CLIPImageProcessor.from_pretrained(model.config.mm_vision_tower, torch_dtype=torch.float16)
+def get_text_embedding(query_text):
+    inputs = clip_processor(text=[query_text], return_tensors="pt", padding=True, truncation=True)
+    with torch.no_grad():
+        vec = vdb_model.get_text_features(**inputs)
+        vec = torch.nn.functional.normalize(vec, p=2, dim=1)
+    return vec
 
-mm_use_im_start_end = getattr(model.config, "mm_use_im_start_end", False)
-tokenizer.add_tokens([DEFAULT_IMAGE_PATCH_TOKEN], special_tokens=True)
-tokenizer.add_tokens([DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN], special_tokens=True)
+def search_faiss(query_text, top_k=3):
+    if not query_text:
+        raise ValueError("텍스트 입력이 필요합니다.")
 
-model.get_model().vision_tower = build_vision_tower(model.config, delay_load=False).to(device) # delayed load가 default로 되어 있어 외부에서 직접 정의
-vision_tower = model.get_model().vision_tower
-vision_config = vision_tower.config
-vision_config.im_patch_token = tokenizer.convert_tokens_to_ids([DEFAULT_IMAGE_PATCH_TOKEN])[0]
-vision_config.use_im_start_end = mm_use_im_start_end
-vision_config.im_start_token, vision_config.im_end_token = tokenizer.convert_tokens_to_ids([DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN])
-image_token_len = (vision_config.image_size // vision_config.patch_size) ** 2
+    # 텍스트 임베딩 생성
+    query_vec = get_text_embedding(query_text)
+    query_vec = torch.nn.functional.normalize(query_vec, p=2, dim=1)
 
-def inference(qs, image_file) :
-    image = load_image(image_file)
-    qs = DEFAULT_IMAGE_TOKEN + '\n' + qs
+    # FAISS 검색
+    index = faiss.read_index("/content/drive/MyDrive/Joleop Project/skin_disease.index")
+    with open("/content/drive/MyDrive/Joleop Project/skin_disease_metadata.json", encoding="utf-8") as f:
+        id_map = json.load(f)
 
-    conv_mode = "mistral"
-    conv = conv_templates[conv_mode].copy()
-    conv.append_message(conv.roles[0], qs)
-    conv.append_message(conv.roles[1], None)
-    prompt = conv.get_prompt()
+    D, I = index.search(query_vec.cpu().numpy(), top_k)
+    results = []
+    for rank, i in enumerate(I[0]):
+        info = id_map[str(i)]
+        results.append({
+            "rank": rank + 1,
+            "score": float(D[0][rank]),
+            "id": info["id"],
+            "disease": info["disease"],
+            "category": info["category"],
+            "text": info["text"][:100] + "..."
+        })
+    return results
 
-    image_tensor = image_processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
-    input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0)
+def generate_answer(
+    query_text: str,
+    image: str = None,
+    context_texts: list = None
+):
 
-    stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
-    keywords = [stop_str, "###"]
-    stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
+    context = "\n".join([f"- {c}" for c in (context_texts or [])])
+    prompt = f"""당신은 피부질환 전문가입니다. 아래 문맥을 참고하여 질문에 정확하게 답변하세요.
+
+문맥:
+{context}
+
+질문:
+{query_text}"""
+
+    messages = [
+        {
+            "role": "system",
+            "content": [{"type": "text", "text": prompt}]
+        },
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "질문: {query_text}".format(query_text=query_text)},
+                {"type": "image", "image": image}
+            ]
+        }
+    ]
+    inputs = processor.apply_chat_template(
+        messages, add_generation_prompt=True, tokenize=True,
+        return_dict=True, return_tensors="pt"
+    ).to(model.device, dtype=torch.bfloat16)
+
+    input_len = inputs["input_ids"].shape[-1]
 
     with torch.inference_mode():
-        output_ids = model.generate(
-            input_ids.to(device),
-            images=image_tensor.unsqueeze(0).half().to(device),
-            do_sample=True,
-            temperature=0.2,
-            max_new_tokens=1024,
-            stopping_criteria=[stopping_criteria]).cpu()
+        generation = model.generate(**inputs, max_new_tokens=200, do_sample=False)
+        generation = generation[0][input_len:]
 
-    input_token_len = input_ids.shape[1]
-    n_diff_input_output = (input_ids != output_ids[:, :input_token_len]).sum().item()
+    decoded = processor.decode(generation, skip_special_tokens=True)
+    return decoded
 
-    if n_diff_input_output > 0:
-        print(f'[Warning] {n_diff_input_output} output_ids are not the same as the input_ids')
-    outputs = tokenizer.batch_decode(output_ids[:, input_token_len:-1], skip_special_tokens=True)[0]
-    outputs = outputs.strip()
-    if outputs.endswith(stop_str):
-        outputs = outputs[:-len(stop_str)]
-    outputs = outputs.strip()
-    return outputs
+def multimodal_query(query_text=None, image=None, top_k=3):
+    search_results = search_faiss(query_text=query_text, top_k=top_k)
+    context_texts = [r["text"] for r in search_results]
+    return generate_answer(query_text, image, context_texts)
