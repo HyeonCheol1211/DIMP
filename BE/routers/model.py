@@ -35,13 +35,17 @@ with open("/home/ubuntu/DIMP/BE/skin_disease_metadata.json", encoding="utf-8") a
 # === 유틸 함수 ===
 
 def load_image_from_input(image_input: str) -> Image.Image:
+    # base64 이미지인지 확인
     if image_input.startswith("data:image"):
         header, encoded = image_input.split(",", 1)
         return Image.open(BytesIO(base64.b64decode(encoded))).convert("RGB")
-    elif image_input.startswith("http"):
+    
+    # http/https URL인 경우
+    elif image_input.startswith("http://") or image_input.startswith("https://"):
         response = requests.get(image_input, timeout=5)
         response.raise_for_status()
         return Image.open(BytesIO(response.content)).convert("RGB")
+    
     else:
         raise ValueError("지원하지 않는 이미지 형식입니다.")
 
