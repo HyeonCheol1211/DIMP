@@ -13,17 +13,17 @@ model = AutoModelForImageTextToText.from_pretrained(
     torch_dtype=torch.bfloat16,
     device_map="auto",
 )
-processor = AutoProcessor.from_pretrained(model_id, use_fast=True)
+processor = AutoProcessor.from_pretrained(model_id, torch_dtype=torch.float16, use_fast=True)
 
 import faiss
 import json
 from transformers import CLIPProcessor, CLIPModel, CLIPProcessor, CLIPTokenizer, CLIPImageProcessor
 
 vdb_model_name = "openai/clip-vit-large-patch14-336"
-vdb_model = CLIPModel.from_pretrained(vdb_model_name)
+vdb_model = CLIPModel.from_pretrained(vdb_model_name, torch_dtype=torch.float16)
 clip_processor = CLIPProcessor(
-    tokenizer=CLIPTokenizer.from_pretrained(vdb_model_name),
-    image_processor=CLIPImageProcessor.from_pretrained(vdb_model_name),
+    tokenizer=CLIPTokenizer.from_pretrained(vdb_model_name, torch_dtype=torch.float16),
+    image_processor=CLIPImageProcessor.from_pretrained(vdb_model_name, torch_dtype=torch.float16),
     torch_dtype=torch.float16, 
     use_fast=True)
 vdb_model.eval()
