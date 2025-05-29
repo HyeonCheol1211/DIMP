@@ -113,6 +113,7 @@ def generate_answer(
     return decoded
 
 def multimodal_query(query_text=None, image=None, top_k=3):
+    image = image.resize((224, 224))
     search_results = search_faiss(query_text=query_text, top_k=top_k)
     context_texts = [r["text"] for r in search_results]
     return generate_answer(query_text, image, context_texts)

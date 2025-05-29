@@ -54,7 +54,6 @@ async def chat(req: ChatRequest):
         return ChatResponse(reply=f"이미지 처리 실패: {str(e)}")
 
     try:
-        image = image.resize((224, 224))
         outputs = multimodal_query(query_text=req.message or "", image=image)
         return ChatResponse(reply=outputs)
     except Exception as e:
