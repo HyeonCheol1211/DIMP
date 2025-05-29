@@ -9,6 +9,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 import httpx  # ✅ 비동기 요청용 라이브러리
+import asyncio
 
 app = FastAPI()
 
@@ -36,13 +37,17 @@ async def load_image_from_input(image_input: str) -> Image.Image:
             return Image.open(BytesIO(image_data)).convert("RGB")
 
         elif image_input.startswith("http://") or image_input.startswith("https://"):
-            async with httpx.AsyncClient() as client:
-                response = await client.get(image_input, timeout=5)
-                response.raise_for_status()
-                return Image.open(BytesIO(response.content)).convert("RGB")
+            try:
+                async with httpx.AsyncClient(timeout=5.0) as client:
+                    response = await client.get(image_input)
+                    response.raise_for_status()
+                    return Image.open(BytesIO(response.content)).convert("RGB")
+            except Exception as e:
+                raise RuntimeError(f"🔴 외부 이미지 요청 실패: {str(e)}")
 
         else:
             raise ValueError("지원하지 않는 이미지 형식입니다.")
+
     except Exception as e:
         raise RuntimeError(f"이미지 로드 실패: {str(e)}")
 
