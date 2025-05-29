@@ -17,11 +17,15 @@ processor = AutoProcessor.from_pretrained(model_id, use_fast=True)
 
 import faiss
 import json
-from transformers import CLIPProcessor, CLIPModel
+from transformers import CLIPProcessor, CLIPModel, CLIPProcessor, CLIPTokenizer, CLIPImageProcessor
 
 vdb_model_name = "openai/clip-vit-large-patch14-336"
 vdb_model = CLIPModel.from_pretrained(vdb_model_name)
-clip_processor = CLIPProcessor.from_pretrained(vdb_model_name, torch_dtype=torch.float16, use_fast=True)
+clip_processor = CLIPProcessor(
+    tokenizer=CLIPTokenizer.from_pretrained(vdb_model_name),
+    image_processor=CLIPImageProcessor.from_pretrained(vdb_model_name),
+    torch_dtype=torch.float16, 
+    use_fast=True)
 vdb_model.eval()
 
 def get_text_embedding(query_text):
