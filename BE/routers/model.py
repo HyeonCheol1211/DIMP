@@ -1,3 +1,11 @@
+import torch, gc
+
+gc.collect()
+torch.cuda.empty_cache()
+
+import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
 from transformers import AutoProcessor, AutoModelForImageTextToText
 from PIL import Image
 import requests
