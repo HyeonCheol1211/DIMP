@@ -3,6 +3,9 @@ from PIL import Image
 import requests
 import torch
 
+from fastapi import APIRouter
+router = APIRouter()
+
 model_id = "google/medgemma-4b-it"
 
 model = AutoModelForImageTextToText.from_pretrained(

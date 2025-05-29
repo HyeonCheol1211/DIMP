@@ -54,9 +54,7 @@ async def chat(req: ChatRequest):
         else:
             image = Image.open(req.image_url).convert('RGB')
         response = multimodal_query(query_text=req.message, image=image)
-        return ChatResponse(reply=f"{response}")
-    else:
-        return ChatResponse(reply="Error")
+
 
 # AWS 검증용
 @app.get("/health")
