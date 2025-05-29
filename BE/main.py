@@ -3,9 +3,13 @@ from pydantic import BaseModel
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import model
+from routers.model import multimodal_query
 
 import os
+from PIL import Image
+from io import BytesIO
+import requests
+
 app = FastAPI()
 
 app.add_middleware(
@@ -38,11 +42,26 @@ async def chat(req: ChatRequest):
         return ChatResponse(reply=f"챗봇이 응답함: {user_msg}")
     '''
     
+    if req.image_url is None:
+        return ChatResponse(
+            reply="정확한 진단을 위해 이미지를 입력해주세요."
+        )
+    
     if req.image_url and req.message:
-        response = model.generate_answer_with_kollava(query_text=req.message, image_path=req.image_url)
-        return ChatResponse(reply=f"{response}")
-    else:
-        return ChatResponse(reply="Error")
+        # URL 유효성 검사
+        if req.image_url.startswith(('http://', 'https://')):
+            try:
+                response = requests.get(req.image_url, timeout=5)
+                response.raise_for_status()  # HTTP 에러 체크
+                image = Image.open(BytesIO(response.content)).convert('RGB')
+            except Exception as e:
+                return ChatResponse(reply=f"이미지 불러오기 오류: {str(e)}")
+            
+            # 멀티모달 처리
+            result = multimodal_query(query_text=req.message, image=image)
+            return ChatResponse(reply=f"{result}")
+        else:
+            return ChatResponse(reply="잘못된 이미지 URL입니다.")
 
 # AWS 검증용
 @app.get("/health")
