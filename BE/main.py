@@ -8,7 +8,7 @@ from routers.model import multimodal_query
 import os
 from PIL import Image
 from io import BytesIO
-import requests
+import base64, requests
 
 app = FastAPI()
 
@@ -47,13 +47,19 @@ async def chat(req: ChatRequest):
             reply="정확한 진단을 위해 이미지를 입력해주세요."
         )
     
-    if req.image_url.startswith(('http://', 'https://')):
-        response = requests.get(req.image_url, timeout=5)
-        response.raise_for_status()  # HTTP 오류 체크
-        image = Image.open(BytesIO(response.content)).convert('RGB')
-    else:
-        image = Image.open(req.image_url).convert('RGB') 
-        
+    try:
+        if req.image_url.startswith("data:image"):
+            header, encoded = req.image_url.split(",", 1)
+            image_data = base64.b64decode(encoded)
+            image = Image.open(BytesIO(image_data)).convert("RGB")
+        else:
+            response = requests.get(req.image_url, timeout=5)
+            response.raise_for_status()
+            image = Image.open(BytesIO(response.content)).convert("RGB")
+    except Exception as e:
+        return {"error": f"이미지 처리 실패: {str(e)}"}
+
+    # 멀티모달 응답 처리
     outputs = multimodal_query(query_text=req.message, image=image)
     return ChatResponse(
         reply=outputs
