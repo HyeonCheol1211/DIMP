@@ -6,6 +6,8 @@ export default function App() {
   const [chatLog, setChatLog] = useState([]);
   const [imagePreview, setImagePreview] = useState(null);
   const chatEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const [isSending, setIsSending] = useState(false);
 
   const fileToBase64 = (file) =>
     new Promise((resolve, reject) => {
@@ -17,6 +19,10 @@ export default function App() {
 
   const sendMessage = async () => {
     if (!input.trim() && !imagePreview) return;
+    
+    if (isSending) return; // 이미 전송 중이면 중복 전송 막기!
+
+    setIsSending(true); // 전송 중 표시
 
     if (input.trim())
       setChatLog((prev) => [...prev, { sender: "user", text: input }]);
@@ -55,6 +61,7 @@ export default function App() {
 
     setInput("");
     setImagePreview(null);
+    setIsSending(false); // 전송 완료!
   };
 
   const handleKeyPress = (e) => {
@@ -71,6 +78,10 @@ export default function App() {
     const base64 = await fileToBase64(file);
     setImagePreview(base64);
     e.target.value = null;
+    
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   useEffect(() => {
@@ -150,6 +161,7 @@ export default function App() {
           />
 
           <textarea
+            ref={inputRef}
             rows={1}
             placeholder="문의할 내용을 입력해주세요."
             value={input}
@@ -163,7 +175,7 @@ export default function App() {
             type="submit"
             className="send-button"
             title="전송"
-            disabled={!canSend}
+            disabled={!canSend || isSending}
           >
             <img
               src="/images/send.png"
