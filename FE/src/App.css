@@ -1,297 +1,218 @@
-/* 전체 배경 및 레이아웃 */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+/* 전체 배경과 레이아웃 */
 .app-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #202123;
-  color: #ececf1;
+  background: url('../public/images/background.png') no-repeat center center;
+  background-size: cover;
+  color: #000000;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* 상단 헤더 - 고정 */
+/* 상단 헤더 */
 .app-header {
-  height: 65px;
-  background: #343541;
+  height: 60px;
+  background: url('../public/images/titleBackGround.png') no-repeat center center;
+  background-size: contain;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  font-weight: 600;
-  font-size: 1.25rem;
-  user-select: none;
-  color: #ececf1;
-  box-shadow: 0 1px 0 #444752;
-  flex-shrink: 0;
-  z-index: 100;
-}
-
-.app-logo {
+  justify-content: center;
   font-weight: 700;
-  font-size: 40px;
+  font-size: 1.5rem;
+  color: #ffffff;
+  flex-shrink: 0;
+  z-index: 10;
 }
 
-/* 메인 채팅 영역 */
+/* 채팅 영역 */
 .chatbox {
   flex: 1;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: #343541;
+  background: transparent;
 }
 
-/* 채팅 기록 스크롤 영역 */
+/* 채팅 기록 */
 .chatlog {
   flex-grow: 1;
   overflow-y: auto;
-  padding: 16px 40px;
-  scrollbar-width: thin;
-  scrollbar-color: #56575a transparent;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .chatlog::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .chatlog::-webkit-scrollbar-thumb {
-  background-color: #56575a;
-  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
 }
 
 /* 빈 화면 메시지 */
 .chat-empty {
-  color: #8e8ea0;
+  color: #ffffff;
   text-align: center;
-  font-size: 3rem;
-  
-  /* Flexbox를 이용해 중앙 정렬 */
+  font-size: 2rem;
   display: flex;
-  justify-content: center;  /* 수평 중앙 */
-  align-items: center;      /* 수직 중앙 */
-  position: absolute;       /* 절대 위치 */
-  top: 46%;                 /* 상단에서 50% */
-  left: 50%;                /* 좌측에서 50% */
-  transform: translate(-50%, -50%);  /* 정확한 중앙을 위해 이동 */
-  width: 100%;              /* 요소가 부모의 가로폭을 가짐 */
-  height: 100vh;            /* 부모의 세로 높이를 채움 */
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }
 
-/* 메시지 개별 */
+/* 메시지 */
 .chat-message {
+  width: 100%;
+  max-width: 450px;
   display: flex;
-  margin-bottom: 14px;
-  max-width: 65%;
+  margin-bottom: 12px;
   font-size: 1rem;
   line-height: 1.4;
   word-break: break-word;
-  user-select: text;
 }
 
+/* 사용자 메시지는 오른쪽에서 1/3 위치 */
 .chat-message.user {
-  margin-left: auto;
   justify-content: flex-end;
+  margin-left: auto;
+  margin-right: calc(28%); /* 오른쪽 1/3 */
 }
 
+/* 봇 메시지는 왼쪽에서 1/3 위치 */
 .chat-message.bot {
   justify-content: flex-start;
+  margin-left: calc(28%); /* 왼쪽 1/3 */
 }
 
-/* 말풍선 텍스트 */
+
+/* 말풍선 */
 .message-text {
-  background: #40414f;
-  padding: 10px 14px;
-  border-radius: 18px;
+  background: #ffffff;
+  color: #000000;
+  padding: 10px 16px;
+  border-radius: 20px;
   white-space: pre-wrap;
-  color: #e3e3e8;
-  box-shadow: 0 1px 0 rgb(255 255 255 / 0.04);
-  user-select: text;
+  box-shadow: none;
   max-width: 100%;
-  font-size: 30px;
 }
 
 .chat-message.user .message-text {
   background: #4a90e2;
-  color: white;
-  border-bottom-right-radius: 4px;
-  font-weight: 500;
-  box-shadow: 0 2px 8px rgb(74 144 226 / 0.8);
+  color: #ffffff;
 }
 
 .chat-message.bot .message-text {
-  background: #40414f;
-  border-bottom-left-radius: 4px;
+  background: #ffffff;
+  color: #000000;
 }
 
 /* 이미지 메시지 */
 .message-image {
-  max-width: 240px;
-  max-height: 160px;
+  max-width: 200px;
+  max-height: 150px;
   border-radius: 12px;
   margin-top: 6px;
   object-fit: cover;
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgb(0 0 0 / 0.4);
-  transition: transform 0.15s ease;
-}
-
-.message-image:hover {
-  transform: scale(1.04);
+  box-shadow: none;
 }
 
 /* 입력 영역 */
 .input-area {
+  margin: 20px auto;
+  width: calc(44% - 10px);
+  max-width: 1000px;
   display: flex;
   align-items: center;
-  padding: 12px 20px;
-  gap: 8px;
-  border-top: 1px solid #444652;
-  background: #343541;
-  flex-shrink: 0;
+  padding: 0px 30px 12px 20px;
+  border-radius: 40px;    
 }
 
-/* 입력창 텍스트 영역 */
 .input-textarea {
   flex: 1;
   resize: none;
-  background: #202123;
-  color: #ececf1;
+  background: transparent;
   border: none;
-  border-radius: 20px;
+  color: #000000;
   padding: 12px 18px;
   font-size: 1rem;
   line-height: 1.3;
   outline: none;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: white;
+  border-radius: 8px;
 }
 
 .input-textarea::placeholder {
-  color: #56575a;
-  font-weight: 400;
+  color: #999999;
 }
 
-/* 사진첨부 라벨 */
+/* 사진첨부 버튼 */
 .image-upload-label {
   cursor: pointer;
-  font-size: 1.6rem;
-  color: #e3e3e8;
-  user-select: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 10px;
-  border-radius: 12px;
-  transition: background-color 0.15s ease;
 }
 
-.image-upload-label:hover {
-  background-color: #56575a;
+.image-icon {
+  width: 44.76px;
+  height: 44.76px;
+  object-fit: contain;
+  margin-right: 5px;
 }
 
 /* 전송 버튼 */
 .send-button {
-  background: #ffffff;
+  background: transparent;
   border: none;
-  color: #000000;
   cursor: pointer;
-  font-weight: 700;
-  font-size: 1.3rem;
-  border-radius: 12px;
-  padding: 10px 16px;
-  user-select: none;
-  transition: background-color 0.15s ease;
+  margin-left: 5.4px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
+  width: 44.76px;
+  height: 44.76px;
 }
 
-.send-button:hover {
-  background-color: #15915a;
+.send-icon {
+  width: 46.06px;
+  height: 46.06px;
+  object-fit: contain;
 }
 
-/* 전송 버튼 화살표 */
-.send-button::before {
-  content: '▶';
-  display: inline-block;
-  transform: translateX(2px);
+.send-button:disabled {
+  cursor: not-allowed;
 }
 
-
-/* 이미지 미리보기 컨테이너 */
+/* 이미지 미리보기 */
 .image-preview-container {
+  margin: 10px auto;
+  width: calc(100% - 200px);
+  max-width: 700px;
   display: flex;
   align-items: center;
-  margin: 10px 20px;
   gap: 12px;
 }
 
-/* 미리보기 이미지 스타일 */
 .image-preview-container .message-image {
-  max-width: 160px;
-  max-height: 120px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  max-width: 120px;
+  max-height: 90px;
 }
 
-/* 이미지 제거 버튼 (❌) */
-.remove-image-button {
-  background-color: #4a4b57;
-  border: none;
-  color: #ff6b6b;
-  font-size: 1.5rem;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 8px;
-  padding: 6px 10px;
-  transition: background-color 0.15s ease;
-}
-
-.remove-image-button:hover {
-  background-color: #5c5d6a;
-  color: #ff4c4c;
-}
-
-/* 전송 버튼 비활성화 상태 */
-.send-button:disabled {
-  background-color: #9e9e9e;
-  color: #ffffff;
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-/* 전송 버튼 아이콘 조정 */
-.send-button::before {
-  content: '▶';
-  font-size: 1.2rem;
-  transform: none;
-}
-
-.image-icon {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-}
-
-/* ❌ 아이콘 크기 및 정렬 */
-.x-icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  pointer-events: none; /* 버튼 클릭만 인식되도록 */
-}
-
-/* 삭제 버튼 자체 스타일 */
 .remove-image-button {
   background: transparent;
   border: none;
-  padding: 4px;
+  font-size: 1.2rem;
+  color: #ff6b6b;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.2s ease;
 }
 
 .remove-image-button:hover {
-  opacity: 0.8;
+  color: #ff4c4c;
 }
