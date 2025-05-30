@@ -111,7 +111,7 @@ export default function App() {
           ))}
           <div ref={chatEndRef} />
         </div>
-        
+
         {imagePreview && (
           <div className="image-preview-container">
             <img
@@ -124,7 +124,7 @@ export default function App() {
               className="remove-image-button"
               title="이미지 제거"
             >
-              <img src="/images/x.png" alt="취소 이미지" className="x-icon"/>
+              X
             </button>
           </div>
         )}
@@ -138,7 +138,7 @@ export default function App() {
           aria-label="메시지 입력창"
         >
           <label htmlFor="image-upload" className="image-upload-label" title="사진 첨부">
-            <img src="/images/picture.png" alt="사진 첨부 이미지" className="image-icon" />
+            <img src="/images/picture2.png" alt="사진 첨부 이미지" className="image-icon" />
           </label>
           <input
             id="image-upload"
@@ -151,7 +151,7 @@ export default function App() {
 
           <textarea
             rows={1}
-            placeholder="메시지를 입력하세요"
+            placeholder="문의할 내용을 입력해주세요."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
@@ -165,9 +165,13 @@ export default function App() {
             title="전송"
             disabled={!canSend}
           >
+            <img
+              src="/images/send.png"
+              alt="전송"
+              className="send-icon"
+            />
           </button>
         </form>
-        
       </main>
     </div>
   );
