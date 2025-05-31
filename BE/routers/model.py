@@ -8,11 +8,11 @@ import torch
 
 from transformers import BitsAndBytesConfig
 
+# 8bit로 변경
 bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_compute_dtype=torch.float16,
-    bnb_4bit_use_double_quant=True,
-    bnb_4bit_quant_type="nf4",
+    load_in_8bit=True,
+    llm_int8_threshold=6.0,
+    llm_int8_skip_modules=["lm_head"],  # 중요 모듈 정밀도 유지
 )
 
 from fastapi import APIRouter
