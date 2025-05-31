@@ -11,8 +11,8 @@ from transformers import BitsAndBytesConfig
 # 8bit로 변경
 bnb_config = BitsAndBytesConfig(
     load_in_8bit=True,
-    #llm_int8_threshold=6.0,
-    #llm_int8_skip_modules=["lm_head"],  # 중요 모듈 정밀도 유지
+    llm_int8_threshold=6.0,
+    llm_int8_skip_modules=["lm_head"],  # 중요 모듈 정밀도 유지
 )
 
 from fastapi import APIRouter
