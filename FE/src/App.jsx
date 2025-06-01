@@ -6,6 +6,8 @@ export default function App() {
   const [chatLog, setChatLog] = useState([]);
   const [imagePreview, setImagePreview] = useState(null);
   const chatEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const [isSending, setIsSending] = useState(false);
 
   const fileToBase64 = (file) =>
     new Promise((resolve, reject) => {
@@ -17,6 +19,10 @@ export default function App() {
 
   const sendMessage = async () => {
     if (!input.trim() && !imagePreview) return;
+    
+    if (isSending) return; // 이미 전송 중이면 중복 전송 막기!
+
+    setIsSending(true); // 전송 중 표시
 
     if (input.trim())
       setChatLog((prev) => [...prev, { sender: "user", text: input }]);
@@ -55,6 +61,7 @@ export default function App() {
 
     setInput("");
     setImagePreview(null);
+    setIsSending(false); // 전송 완료!
   };
 
   const handleKeyPress = (e) => {
@@ -71,6 +78,10 @@ export default function App() {
     const base64 = await fileToBase64(file);
     setImagePreview(base64);
     e.target.value = null;
+    
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   useEffect(() => {
@@ -111,7 +122,7 @@ export default function App() {
           ))}
           <div ref={chatEndRef} />
         </div>
-        
+
         {imagePreview && (
           <div className="image-preview-container">
             <img
@@ -124,7 +135,7 @@ export default function App() {
               className="remove-image-button"
               title="이미지 제거"
             >
-              <img src="/images/x.png" alt="취소 이미지" className="x-icon"/>
+              X
             </button>
           </div>
         )}
@@ -138,7 +149,7 @@ export default function App() {
           aria-label="메시지 입력창"
         >
           <label htmlFor="image-upload" className="image-upload-label" title="사진 첨부">
-            <img src="/images/picture.png" alt="사진 첨부 이미지" className="image-icon" />
+            <img src="/images/picture2.png" alt="사진 첨부 이미지" className="image-icon" />
           </label>
           <input
             id="image-upload"
@@ -150,8 +161,9 @@ export default function App() {
           />
 
           <textarea
+            ref={inputRef}
             rows={1}
-            placeholder="메시지를 입력하세요"
+            placeholder="문의할 내용을 입력해주세요."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
@@ -163,11 +175,15 @@ export default function App() {
             type="submit"
             className="send-button"
             title="전송"
-            disabled={!canSend}
+            disabled={!canSend || isSending}
           >
+            <img
+              src="/images/send.png"
+              alt="전송"
+              className="send-icon"
+            />
           </button>
         </form>
-        
       </main>
     </div>
   );
