@@ -32,7 +32,7 @@ import faiss
 import json
 from transformers import CLIPProcessor, CLIPModel, CLIPProcessor, CLIPTokenizer, CLIPImageProcessor
 
-vdb_model_name = "openai/clip-vit-large-patch14-336"
+vdb_model_name = "openai/clip-vit-base-patch32"
 vdb_model = CLIPModel.from_pretrained(vdb_model_name, torch_dtype=torch.float16)
 clip_processor = CLIPProcessor(
     tokenizer=CLIPTokenizer.from_pretrained(vdb_model_name, torch_dtype=torch.float16),
