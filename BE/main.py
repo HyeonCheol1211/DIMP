@@ -3,12 +3,19 @@ from pydantic import BaseModel
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 
-import os
+from routers.model import multimodal_query
+
+import base64
+from io import BytesIO
+from PIL import Image
+import httpx  # ✅ 비동기 요청용 라이브러리
+import asyncio
+
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React 개발 서버 주소
+    allow_origins=["http://localhost:3000"],  # 프론트엔드 주소
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -16,26 +23,53 @@ app.add_middleware(
 
 class ChatRequest(BaseModel):
     message: Optional[str] = None
-    image_url: Optional[str] = None  # HttpUrl 대신 str로 변경
+    image_url: Optional[str] = None
 
 class ChatResponse(BaseModel):
     reply: Optional[str] = None
-    reply_image_url: Optional[str] = None
+    reply_image_url: Optional[str] = None  # 향후 확장용
+
+async def load_image_from_input(image_input: str) -> Image.Image:
+    try:
+        if image_input.startswith("data:image"):
+            header, encoded = image_input.split(",", 1)
+            image_data = base64.b64decode(encoded)
+            return Image.open(BytesIO(image_data)).convert("RGB")
+
+        elif image_input.startswith("http://") or image_input.startswith("https://"):
+            try:
+                async with httpx.AsyncClient(timeout=5.0) as client:
+                    response = await client.get(image_input)
+                    response.raise_for_status()
+                    return Image.open(BytesIO(response.content)).convert("RGB")
+            except Exception as e:
+                raise RuntimeError(f"🔴 외부 이미지 요청 실패: {str(e)}")
+
+        else:
+            raise ValueError("지원하지 않는 이미지 형식입니다.")
+
+    except Exception as e:
+        raise RuntimeError(f"이미지 로드 실패: {str(e)}")
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
-    if req.image_url:
-        # Base64 문자열이든 URL이든 문자열로 받음
-        # 예시: 받은 이미지를 그대로 답장에 포함 (간단히)
-        return ChatResponse(
-            reply="이미지를 받았어요.",
-            reply_image_url=req.image_url,
-        )
-    else:
-        user_msg = req.message or ""
-        return ChatResponse(reply=f"챗봇이 응답함: {user_msg}")
+    print(f"[요청 수신] message={req.message}, image_url={(req.image_url or '')[:30]}...")
 
-# AWS 검증용
-@app.get("/health")
-def health_check():
-    return {"status": "healthy"}
+    if req.image_url is None or req.image_url.strip() == "":
+        print("🚫 이미지 없음")
+        return ChatResponse(reply="정확한 진단을 위해 이미지를 입력해주세요.", reply_image_url=None)
+
+    try:
+        image = await load_image_from_input(req.image_url)
+        print("✅ 이미지 로드 성공")
+    except Exception as e:
+        print(f"❌ 이미지 처리 실패: {e}")
+        return ChatResponse(reply=f"이미지 처리 실패: {str(e)}", reply_image_url=None)
+
+    try:
+        outputs = multimodal_query(query_text=req.message or "", image=image)
+        print("✅ 멀티모달 쿼리 성공")
+        return ChatResponse(reply=outputs, reply_image_url=None)
+    except Exception as e:
+        print(f"❌ 멀티모달 실패: {e}")
+        return ChatResponse(reply=f"멀티모달 응답 실패: {str(e)}", reply_image_url=None)
