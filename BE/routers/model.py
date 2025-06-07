@@ -103,7 +103,7 @@ def generate_answer_text_only(query_text: str, context_texts: list = None):
     return processor.decode(generation, skip_special_tokens=True)
 
 def generate_answer_image_only(image: str):
-    prompt = "당신은 피부질환 전문가입니다. 아래 이미지를 보고 질병에 대해 설명하세요. 또한, 더욱 정확한 답변을 위해 텍스트 입력을을 권장하여 주세요."
+    prompt = "당신은 피부질환 전문가입니다. 아래 이미지를 보고 질병에 대해 설명하세요. 또한, 더욱 정확한 답변을 위해 텍스트 입력을 권장하여 주세요."
 
     messages = [
         {"role": "system", "content": [{"type": "text", "text": prompt}]},
