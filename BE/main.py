@@ -55,16 +55,15 @@ async def load_image_from_input(image_input: str) -> Image.Image:
 async def chat(req: ChatRequest):
     print(f"[요청 수신] message={req.message}, image_url={(req.image_url or '')[:30]}...")
 
-    if req.image_url is None or req.image_url.strip() == "":
-        print("🚫 이미지 없음")
-        return ChatResponse(reply="정확한 진단을 위해 이미지를 입력해주세요.", reply_image_url=None)
+    image = None  # 초기화 필수
 
-    try:
-        image = await load_image_from_input(req.image_url)
-        print("✅ 이미지 로드 성공")
-    except Exception as e:
-        print(f"❌ 이미지 처리 실패: {e}")
-        return ChatResponse(reply=f"이미지 처리 실패: {str(e)}", reply_image_url=None)
+    if req.image_url is not None and req.image_url.strip() != "":
+        try:
+            image = await load_image_from_input(req.image_url)
+            print("✅ 이미지 로드 성공")
+        except Exception as e:
+            print(f"❌ 이미지 처리 실패: {e}")
+            return ChatResponse(reply=f"이미지 처리 실패: {str(e)}", reply_image_url=None)
 
     try:
         outputs = multimodal_query(query_text=req.message or "", image=image)
