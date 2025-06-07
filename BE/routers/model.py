@@ -75,14 +75,9 @@ def search_faiss(query_text, top_k=3):
         })
     return results
 
-def generate_answer(
-    query_text: str,
-    image: str = None,
-    context_texts: list = None
-):
-
+def generate_answer_text_only(query_text: str, context_texts: list = None):
     context = "\n".join([f"- {c}" for c in (context_texts or [])])
-    prompt = f"""당신은 피부질환 전문가입니다. 아래 문맥을 참고하여 질문에 정확하게 답변하세요.
+    prompt = f"""당신은 피부질환 전문가입니다. 아래 문맥을 참고하여 질문에 정확하게 답변하세요. 또한, 더욱 정확한 답변을 위해 이미지 첨부를 권장하여 주세요.
 
 문맥:
 {context}
@@ -91,34 +86,103 @@ def generate_answer(
 {query_text}"""
 
     messages = [
-        {
-            "role": "system",
-            "content": [{"type": "text", "text": prompt}]
-        },
-        {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": "질문: {query_text}".format(query_text=query_text)},
-                {"type": "image", "image": image}
-            ]
-        }
+        {"role": "system", "content": [{"type": "text", "text": prompt}]},
+        {"role": "user", "content": [{"type": "text", "text": f"질문: {query_text}"}]}
     ]
+
     inputs = processor.apply_chat_template(
         messages, add_generation_prompt=True, tokenize=True,
         return_dict=True, return_tensors="pt"
     ).to(model.device, dtype=torch.bfloat16)
 
     input_len = inputs["input_ids"].shape[-1]
-
     with torch.inference_mode():
         generation = model.generate(**inputs, max_new_tokens=500, do_sample=False)
         generation = generation[0][input_len:]
 
-    decoded = processor.decode(generation, skip_special_tokens=True)
-    return decoded
+    return processor.decode(generation, skip_special_tokens=True)
+
+def generate_answer_image_only(image: str):
+    prompt = "당신은 피부질환 전문가입니다. 아래 이미지를 보고 질병에 대해 설명하세요. 또한, 더욱 정확한 답변을 위해 텍스트 입력을을 권장하여 주세요."
+
+    messages = [
+        {"role": "system", "content": [{"type": "text", "text": prompt}]},
+        {"role": "user", "content": [{"type": "image", "image": image}]}
+    ]
+
+    inputs = processor.apply_chat_template(
+        messages, add_generation_prompt=True, tokenize=True,
+        return_dict=True, return_tensors="pt"
+    ).to(model.device, dtype=torch.bfloat16)
+
+    input_len = inputs["input_ids"].shape[-1]
+    with torch.inference_mode():
+        generation = model.generate(**inputs, max_new_tokens=500, do_sample=False)
+        generation = generation[0][input_len:]
+
+    return processor.decode(generation, skip_special_tokens=True)
+
+def generate_answer_text_and_image(query_text: str, image: str, context_texts: list = None):
+    context = "\n".join([f"- {c}" for c in (context_texts or [])])
+    prompt = f"""당신은 피부질환 전문가입니다. 아래 문맥과 이미지를 참고하여 질문에 정확하게 답변하세요.
+
+문맥:
+{context}
+
+질문:
+{query_text}"""
+
+    messages = [
+        {"role": "system", "content": [{"type": "text", "text": prompt}]},
+        {"role": "user", "content": [
+            {"type": "text", "text": f"질문: {query_text}"},
+            {"type": "image", "image": image}
+        ]}
+    ]
+
+    inputs = processor.apply_chat_template(
+        messages, add_generation_prompt=True, tokenize=True,
+        return_dict=True, return_tensors="pt"
+    ).to(model.device, dtype=torch.bfloat16)
+
+    input_len = inputs["input_ids"].shape[-1]
+    with torch.inference_mode():
+        generation = model.generate(**inputs, max_new_tokens=500, do_sample=False)
+        generation = generation[0][input_len:]
+
+    return processor.decode(generation, skip_special_tokens=True)
+
+
+def generate_answer(
+    query_text: str = None,
+    image: str = None,
+    context_texts: list = None
+):
+
+    if query_text and image:
+        return generate_answer_text_and_image(query_text, image, context_texts)
+    elif query_text:
+        return generate_answer_text_only(query_text, context_texts)
+    elif image:
+        return generate_answer_image_only(image)
+
+
 
 def multimodal_query(query_text=None, image=None, top_k=3):
-    image = image.resize((224, 224))
-    search_results = search_faiss(query_text=query_text, top_k=top_k)
-    context_texts = [r["text"] for r in search_results]
-    return generate_answer(query_text, image, context_texts)
+    if query_text is None and image is not None:
+        image = image.resize((224, 224))
+        return generate_answer(image=image)
+    
+    elif query_text is not None and image is None:
+        search_results = search_faiss(query_text=query_text, top_k=top_k)
+        context_texts = [r["text"] for r in search_results]
+        return generate_answer(query_text=query_text, context_texts=context_texts)
+    
+    elif query_text is not None and image is not None:
+        image = image.resize((224, 224))
+        search_results = search_faiss(query_text=query_text, top_k=top_k)
+        context_texts = [r["text"] for r in search_results]
+        return generate_answer(query_text=query_text, image=image, context_texts=context_texts)
+    
+    else:
+        raise ValueError("At least one of query_text or image must be provided.")
